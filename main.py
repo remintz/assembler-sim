@@ -7,11 +7,13 @@ class Computer:
         self.__neg = False
         self.__sp = 0
         self.__overflow = False
+        self.__underflow = False
         self.__instructions = [
             'LDAM', 'LDAI', 'STA',  'INC', 
             'DEC',  'SUM',  'SUB',  'JMP',
             'JZ',   'JN',   'AND',  'OR',
-            'XOR',  'NOT',  'OUT',  'END'
+            'XOR',  'NOT',  'OUT',  'IN',
+            'END'
         ]
 
     def set_program(self, program):
@@ -21,6 +23,9 @@ class Computer:
         idx_memory = 0
         lines = program.split('\n')
         for line in lines:
+            line = line.strip()
+            if len(line) == 0:
+                continue
             tokens = line.split(' ')
             print('tokens: %s' % str(tokens))
             instruction = tokens[0]
@@ -28,7 +33,7 @@ class Computer:
             data_high = None
             instruction_code = self.__instructions.index(instruction)
             if instruction in ['LDAM', 'LDAI', 'STA', 'SUM', 'SUB', 'JMP', 'JZ', 'JN', 'AND', 'OR', 'XOR']:
-                data = tokens[1]
+                data = int(tokens[1])
                 if instruction in ['LDAM', 'STA', 'SUM', 'SUB', 'JMP', 'JZ', 'JN', 'AND', 'OR', 'XOR']:
                     data_low = data % 256
                     data_high = data // 256
@@ -61,13 +66,13 @@ class Computer:
 
     def exec(self):
         self.__sp == 0
-        self.__print_status()
-        while not self.__exec_step():
-            self.__print_status()
+        self.print_status()
+        while not self.exec_step():
+            self.print_status()
             pass
 
     def print_mem(self):
-        for i in range(16):
+        for i in range(32):
             print('MEM [%2d]: %5d' % (i, self.__memory[i]))
 
     def print_status(self):
@@ -134,6 +139,13 @@ class Computer:
             mem = self.get_mem(self.__sp)
             self.__a == ~ self.__a
             self.__sp += 1
+        elif instruction == 'IN':
+            value = int(input('Entre com um valor:'))
+            self.__a = value
+            self.__sp += 1
+        elif instruction == 'OUT':
+            print('out: %d' % self.__a)
+            self.__sp += 1
         elif instruction == 'END':
             return True
         self.update_flags()
@@ -142,9 +154,14 @@ class Computer:
 c = Computer()
 c.set_program(
         """
-        LDAI 20
-        INC
+        IN
         STA 30
+        IN
+        STA 28
+        LDAM 30
+        SUM 28
+        OUT
+        END
         """)
 c.exec()
 
